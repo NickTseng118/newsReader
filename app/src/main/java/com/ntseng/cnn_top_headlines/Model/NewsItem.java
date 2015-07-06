@@ -1,13 +1,11 @@
-package com.ntseng.cnn_top_headlines.Model;
+package com.ntseng.cnn_top_headlines.model;
 
 import com.activeandroid.Model;
 import com.activeandroid.annotation.Column;
 import com.activeandroid.annotation.Table;
-import com.activeandroid.query.Select;
 
 import java.io.Serializable;
 import java.util.Date;
-import java.util.List;
 
 /**
  * Created by nicktseng on 15/6/25.
@@ -24,7 +22,7 @@ public class NewsItem extends Model implements Serializable{
     @Column(name = "description")
     private String description;
     @Column(name = "pubDate")
-    private String pubDate;
+    private Date pubDate;
     @Column(name = "mediaThumbnail")
     private String mediaThumbnail;
     @Column(name = "mediaContent")
@@ -36,7 +34,7 @@ public class NewsItem extends Model implements Serializable{
         super();
     }
 
-    public  NewsItem(String title, String guid, String link, String description, String pubDate, String mediaThumbnail, String mediaContent,Boolean favorite){
+    public  NewsItem(String title, String guid, String link, String description, Date pubDate, String mediaThumbnail, String mediaContent,Boolean favorite){
         super();
         this.title = title;
         this.guid = guid;
@@ -82,11 +80,11 @@ public class NewsItem extends Model implements Serializable{
         this.description = description;
     }
 
-    public String getPubDate() {
+    public Date getPubDate() {
         return pubDate;
     }
 
-    public void setPubDate(String pubDate) {
+    public void setPubDate(Date pubDate) {
         this.pubDate = pubDate;
     }
 

@@ -5,51 +5,42 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
-import android.widget.ImageView;
 
-import com.activeandroid.query.Select;
-import com.ntseng.cnn_top_headlines.Model.NewsItem;
-import com.ntseng.cnn_top_headlines.Singleton.SelectSingleton;
+import com.ntseng.cnn_top_headlines.Singleton.DAOSingleton;
+import com.ntseng.cnn_top_headlines.model.NewsItem;
 
-import java.util.List;
 
 
 public class NewsDetailActivity extends ActionBarActivity {
 
     private NewsItem newsItem;
-
     WebView myBrowser;
-    Toolbar toolBar;
-    ActionBar actionBar;
-    WebSettings webSettings;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_news_detail);
 
-        toolBar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolBar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolBar);
-        actionBar = getSupportActionBar();
+        ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
 
         Bundle bundle  = getIntent().getExtras();
         newsItem = (NewsItem)bundle.getSerializable("newsItem");
 
-        myBrowser=(WebView)findViewById(R.id.mybrowser);
+        myBrowser = (WebView)findViewById(R.id.mybrowser);
 
         actionBar.setTitle(newsItem.getTitle());
 
         String myURL = newsItem.getLink();
 
-        webSettings = myBrowser.getSettings();
+        WebSettings webSettings = myBrowser.getSettings();
         webSettings.setSupportZoom(true);
         webSettings.setBuiltInZoomControls(true);
         webSettings.setJavaScriptEnabled(true);
@@ -88,9 +79,6 @@ public class NewsDetailActivity extends ActionBarActivity {
         return super.onKeyDown(keyCode, event);
     }
 
-    private List<NewsItem> getNewsFromDB (String title) {
-        return SelectSingleton.getSelectInstance().from(NewsItem.class).where ("title = ?", title).execute();
-    }
 
     private void changeFavoriteIcon(MenuItem menuItem){
         if(newsItem.getFavorite() != null && newsItem.getFavorite()) {
@@ -102,7 +90,7 @@ public class NewsDetailActivity extends ActionBarActivity {
 
     private void saveFavorite(MenuItem menuItem){
 
-        NewsItem newsItemDB = getNewsFromDB(newsItem.getTitle()).get(0);
+        NewsItem newsItemDB = DAOSingleton.getDAOInstance().getNewsTitle(newsItem.getTitle()).get(0);
         if(newsItemDB.getFavorite() != null && newsItemDB.getFavorite()) {
             newsItemDB.setFavorite(false);
             menuItem.setIcon(R.drawable.ic_star_border_black_36dp);
@@ -110,7 +98,8 @@ public class NewsDetailActivity extends ActionBarActivity {
             newsItemDB.setFavorite(true);
             menuItem.setIcon(R.drawable.ic_star_black_36dp);
         }
-            newsItemDB.save();
+        DAOSingleton.getDAOInstance().saveItem(newsItemDB);
+
     }
 
     private void onPauseBrowser(){

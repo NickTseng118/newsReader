@@ -1,16 +1,13 @@
-package com.ntseng.cnn_top_headlines.Adapter;
+package com.ntseng.cnn_top_headlines.adapter;
 
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import com.ntseng.cnn_top_headlines.R;
-
-import org.json.JSONException;
 
 import java.util.List;
 
@@ -23,7 +20,7 @@ public class SearchesAdapter extends ArrayAdapter {
     private Context context;
     private List<String> searchesList;
 
-    TextView keywordTV;
+
 
     public SearchesAdapter(Context context, List<String> searches) {
         super(context, R.layout.searches_view, searches);
@@ -48,7 +45,7 @@ public class SearchesAdapter extends ArrayAdapter {
         }
 
         String keyword = (String)getItem(position);
-        keywordTV = (TextView) convertView.findViewById(R.id.keyword_tv);
+        TextView keywordTV = (TextView) convertView.findViewById(R.id.keyword_tv);
         keywordTV.setText(keyword);
 
         return convertView;

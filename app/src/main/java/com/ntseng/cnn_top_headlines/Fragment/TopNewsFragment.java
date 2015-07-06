@@ -1,21 +1,19 @@
-package com.ntseng.cnn_top_headlines.Fragment;
+package com.ntseng.cnn_top_headlines.fragment;
 
 import android.content.Intent;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
-import android.support.v4.app.FragmentTransaction;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
-import com.activeandroid.query.Select;
-import com.ntseng.cnn_top_headlines.Adapter.TopNewsAdapter;
-import com.ntseng.cnn_top_headlines.Model.NewsItem;
+
+import com.ntseng.cnn_top_headlines.Singleton.DAOSingleton;
+import com.ntseng.cnn_top_headlines.adapter.TopNewsAdapter;
+import com.ntseng.cnn_top_headlines.model.NewsItem;
 import com.ntseng.cnn_top_headlines.NewsDetailActivity;
 import com.ntseng.cnn_top_headlines.R;
-import com.ntseng.cnn_top_headlines.Singleton.SelectSingleton;
 
 import java.util.List;
 
@@ -23,7 +21,6 @@ import java.util.List;
 public class TopNewsFragment extends Fragment {
 
     private List<NewsItem> topItemList;
-    ListView topNewsListview;
     TopNewsAdapter mTopNewsAdapter;
 
     @Override
@@ -41,20 +38,16 @@ public class TopNewsFragment extends Fragment {
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        topItemList = getTopItemList();
+        topItemList = DAOSingleton.getDAOInstance().selectAll();
 
-        topNewsListview = (ListView)getActivity().findViewById(R.id.topNewslistView);
+        ListView topNewsListview = (ListView)getActivity().findViewById(R.id.topNewslistView);
         mTopNewsAdapter = new TopNewsAdapter(getActivity(), topItemList);
         topNewsListview.setAdapter(mTopNewsAdapter);
-        topNewsListview.setOnItemClickListener(onItemclicklistener);
+        topNewsListview.setOnItemClickListener(onNewsItemclicklistener);
 
     }
 
-    private List<NewsItem> getTopItemList(){
-        return SelectSingleton.getSelectInstance().all().from((NewsItem.class)).execute();
-    }
-
-    private AdapterView.OnItemClickListener onItemclicklistener = new AdapterView.OnItemClickListener() {
+    private AdapterView.OnItemClickListener onNewsItemclicklistener = new AdapterView.OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             Bundle bundle = new Bundle();
@@ -66,7 +59,8 @@ public class TopNewsFragment extends Fragment {
         }
     };
 
-    public void onRefresh(){
+    public void refresh(){
         mTopNewsAdapter.notifyDataSetChanged();
     }
+
 }

@@ -1,38 +1,44 @@
-package com.ntseng.cnn_top_headlines.Model;
+package com.ntseng.cnn_top_headlines.model;
 
 import android.util.Log;
 
 import com.activeandroid.ActiveAndroid;
 import com.activeandroid.query.Select;
-import com.ntseng.cnn_top_headlines.Singleton.SelectSingleton;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-/**
- * Created by nicktseng on 15/6/26.
- */
+import java.util.concurrent.ExecutionException;
 
 
 public class NewsItemDAO {
 
-    private List<NewsItem> newsItemList;
+    //private List<NewsItem> newsItemList;
     private List<NewsItem> newsItemDBList;
-    private List<NewsItem> saveNewsItemList = new ArrayList<NewsItem>();
+    Select select = new Select();
 
     public NewsItemDAO(){
 
     }
-    public NewsItemDAO(List<NewsItem> list){
-        this.newsItemList = list;
-    }
-
     public List<NewsItem> selectAll(){
-        newsItemDBList = SelectSingleton.getSelectInstance().all().from((NewsItem.class)).execute();
+        newsItemDBList = select.all().from((NewsItem.class)).orderBy("pubDate DESC").execute();
         return newsItemDBList;
     }
 
-    public void compare(){
+    public List<NewsItem> getNewsTitle (String title) {
+        return select.from(NewsItem.class).where ("title = ?", title).execute();
+    }
+
+    public List<NewsItem> queryNewsByTitle(String keyword){
+        return select.from(NewsItem.class).where("title LIKE ?", new String[] {"%" + keyword + "%" }).execute();
+    }
+
+    public List<NewsItem> getFavoriteNews (boolean favorite) {
+        return select.from(NewsItem.class).where ("favorite = ?", favorite).execute();
+    }
+
+    public void merge(List<NewsItem> newsItemList){
+        List<NewsItem> saveNewsItemList = new ArrayList<NewsItem>();
         for(NewsItem newsItem : newsItemList){
             if(selectAll().size() == 0) {
                 saveNewsItemList.add(newsItem);
@@ -45,12 +51,13 @@ public class NewsItemDAO {
                     }
                 }
                 if(value != 0)
-                saveNewsItemList.add(0,newsItem);
+                saveNewsItemList.add(0, newsItem);
             }
         }
+        saveFromList(saveNewsItemList);
     }
 
-    public void save(){
+    public void saveFromList(List<NewsItem> saveNewsItemList){
         ActiveAndroid.beginTransaction();
         try {
             for (NewsItem newsItem : saveNewsItemList) {
@@ -59,9 +66,14 @@ public class NewsItemDAO {
             saveNewsItemList.clear();
             ActiveAndroid.setTransactionSuccessful();
             Log.e("tag", "Save Successful");
+
         } finally {
             ActiveAndroid.endTransaction();
         }
+    }
+
+    public void saveItem(NewsItem newsItem){
+        newsItem.save();
     }
 
 }

@@ -1,9 +1,11 @@
 package com.ntseng.cnn_top_headlines;
 
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.support.design.widget.TabLayout;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.ViewPager;
@@ -17,26 +19,29 @@ import android.view.MenuItem;
 
 import com.activeandroid.ActiveAndroid;
 import com.facebook.drawee.backends.pipeline.Fresco;
-import com.ntseng.cnn_top_headlines.Adapter.SectionPagerAdapter;
-import com.ntseng.cnn_top_headlines.Fragment.FavoriteNewsFragment;
-import com.ntseng.cnn_top_headlines.Fragment.TopNewsFragment;
+import com.ntseng.cnn_top_headlines.Singleton.DAOSingleton;
+import com.ntseng.cnn_top_headlines.adapter.SectionPagerAdapter;
+import com.ntseng.cnn_top_headlines.fragment.FavoriteNewsFragment;
+import com.ntseng.cnn_top_headlines.fragment.TopNewsFragment;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Handler;
 
 
 public class MainActivity extends AppCompatActivity {
 
     Intent startservice;
     SectionPagerAdapter mSectionPagerAdapter;
-    Toolbar toolBar;
-    ActionBar actionBar;
-    ViewPager viewPager;
-    TabLayout tabLayout;
+
+    SharedPreferences prefs = null;
 
     List fragments;
     TopNewsFragment topNewsFragment;
     FavoriteNewsFragment favoriteNewsFragment;
+    ViewPager viewPager;
+
+    ProgressDialog dialog;
 
     private final static int TOP_FRAGMENT = 0;
     private final static int FAVORITE_FRAGMENT = 1;
@@ -49,15 +54,15 @@ public class MainActivity extends AppCompatActivity {
         ActiveAndroid.initialize(this);
         Fresco.initialize(this);
 
-        startservice = new Intent(MainActivity.this, XMLParserService.class);
-        startService(startservice);
+        prefs = getSharedPreferences("com.ntseng.cnn", MODE_PRIVATE);
 
-        toolBar = (Toolbar) findViewById(R.id.toolbar);
+        startservice = new Intent(MainActivity.this, XMLParserService.class);
+        Toolbar toolBar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolBar);
-        actionBar = getSupportActionBar();
+        ActionBar actionBar = getSupportActionBar();
         actionBar.setTitle("CNN News Reader");
 
-        tabLayout = (TabLayout) findViewById(R.id.tab_layout);
+        TabLayout tabLayout = (TabLayout) findViewById(R.id.tab_layout);
         viewPager = (ViewPager) findViewById(R.id.pager);
 
         fragments = new ArrayList();
@@ -75,13 +80,23 @@ public class MainActivity extends AppCompatActivity {
         IntentFilter grabCompletion = new IntentFilter(XMLParserService.GRAB_COMPLETTION);
         LocalBroadcastManager.getInstance(this).registerReceiver(onEvent, grabCompletion);
 
+        
+
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        LocalBroadcastManager.getInstance(this)
-                .unregisterReceiver(onEvent);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(onEvent);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (prefs.getBoolean("firstinstall", true)) {
+            prefs.edit().putBoolean("firstinstall", false).commit();
+            startService(startservice);
+        }
     }
 
     @Override
@@ -103,16 +118,21 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }else if(id == R.id.action_refresh){
             startService(startservice);
+            dialog = ProgressDialog.show(this, "Refreshing", "Please Wait...", true);
+
+
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
-
-
     private BroadcastReceiver onEvent = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
+
             viewPager.setAdapter(mSectionPagerAdapter);
+            if(dialog != null)
+                dialog.dismiss();
+
         }
     };
 
@@ -125,9 +145,9 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onPageSelected(int position) {
             if(position == TOP_FRAGMENT){
-                topNewsFragment.onRefresh();
+                topNewsFragment.refresh();
             }else if(position == FAVORITE_FRAGMENT){
-                favoriteNewsFragment.onRefresh();
+                favoriteNewsFragment.refresh();
             }
         }
         @Override

@@ -1,17 +1,15 @@
 package com.ntseng.cnn_top_headlines;
 
 import android.app.IntentService;
-import android.app.Service;
+import android.app.ProgressDialog;
 import android.content.Intent;
-import android.os.IBinder;
 
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
-import com.activeandroid.ActiveAndroid;
-import com.activeandroid.query.Select;
-import com.ntseng.cnn_top_headlines.Model.NewsItem;
-import com.ntseng.cnn_top_headlines.Model.NewsItemDAO;
+import com.ntseng.cnn_top_headlines.Singleton.DAOSingleton;
+import com.ntseng.cnn_top_headlines.model.NewsItem;
+import com.ntseng.cnn_top_headlines.model.NewsItemDAO;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -33,31 +31,29 @@ import java.util.Locale;
 public class XMLParserService extends IntentService {
 
     private String text;
-    private NewsItem newsItem;
     private List<NewsItem> newsItemList = new ArrayList<NewsItem>();
     List<NewsItem> datebaseList;
 
     public XMLParserService() {
         super("XMLParserService");
     }
-
     public static final String GRAB_COMPLETTION = "com.ntseng.cnn_top_headlines.XMLparserService.grab.COMPLETE";
 
     @Override
     protected void onHandleIntent(Intent intent) {
+
         try {
-            xmlPullParser();
+            parseCnnRssFeed();
         } catch (XmlPullParserException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        NewsItemDAO newItemDAO = new NewsItemDAO(newsItemList);
-        newItemDAO.compare();
-        newItemDAO.save();
+        DAOSingleton.getDAOInstance().merge(newsItemList);
 
         LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(GRAB_COMPLETTION));
+
 
     }
 
@@ -66,7 +62,7 @@ public class XMLParserService extends IntentService {
         super.onDestroy();
     }
 
-    public void xmlPullParser()throws XmlPullParserException, IOException {
+    public void parseCnnRssFeed()throws XmlPullParserException, IOException {
 
         XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
         factory.setNamespaceAware(true);
@@ -76,6 +72,8 @@ public class XMLParserService extends IntentService {
 
         int eventType = xpp.getEventType();
 
+        NewsItem newsItem = null;
+
         while (eventType != XmlPullParser.END_DOCUMENT){
 
             String tagName = xpp.getName();
@@ -84,8 +82,9 @@ public class XMLParserService extends IntentService {
             if (eventType == XmlPullParser.START_DOCUMENT){
 
             }else if (eventType == XmlPullParser.START_TAG){
-                if(tagName.equalsIgnoreCase("item"))
+                if(tagName.equalsIgnoreCase("item")) {
                     newsItem = new NewsItem();
+                }
             }else if (eventType == XmlPullParser.TEXT){
 
                 text = xpp.getText();
@@ -95,24 +94,16 @@ public class XMLParserService extends IntentService {
                 if(newsItem != null) {
                     if (tagName.equalsIgnoreCase("title")) {
                         newsItem.setTitle(text);
+                        Log.e("title", "is " + text);
                     } else if (tagName.equalsIgnoreCase("guid")) {
                         newsItem.setGuid(text);
                     } else if (tagName.equalsIgnoreCase("link")) {
-                       // Log.e("link", "is" + text);
                         newsItem.setLink(text);
                     } else if (tagName.equalsIgnoreCase("description")) {
                        // Log.e("description", "is" + text);
                         newsItem.setDescription(text);
                     } else if (tagName.equalsIgnoreCase("pubDate")) {
-                        SimpleDateFormat formatter = new SimpleDateFormat("EEE',' dd MMM yyyy HH:mm:ss zzz");
-                        try {
-                            Date date = formatter.parse(text);
-                            Log.e("date", "" + date);
-                        } catch (ParseException e) {
-                            e.printStackTrace();
-                        }
-                       // Log.e("pubDate", "is" + text);
-                        newsItem.setPubDate(text);
+                        newsItem.setPubDate(dateFormat(text));
                     } else if (tagName.equalsIgnoreCase("thumbnail")) {
                        // Log.e("thumbnail", "is" + xpp.getAttributeValue(null, "url"));
                         url = xpp.getAttributeValue(null, "url");
@@ -132,9 +123,8 @@ public class XMLParserService extends IntentService {
     }
 
     private Date dateFormat(String text){
-        SimpleDateFormat formatter = new SimpleDateFormat("EEE',' dd MMM yyyy HH:mm:ss zzz");
+        SimpleDateFormat formatter = new SimpleDateFormat("EEE',' dd MMM yyyy HH:mm:ss Z", Locale.US);
         try {
-            //Log.e("date","" + formatter.parse("Tue, 16 Jun 2015 03:57:20 EDT"));
             return formatter.parse(text);
         } catch (ParseException e) {
             e.printStackTrace();

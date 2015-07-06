@@ -4,8 +4,8 @@ package com.ntseng.cnn_top_headlines;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -18,31 +18,33 @@ import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
-import com.ntseng.cnn_top_headlines.Adapter.SearchesAdapter;
-import com.ntseng.cnn_top_headlines.Adapter.TopNewsAdapter;
-import com.ntseng.cnn_top_headlines.Model.NewsItem;
-import com.ntseng.cnn_top_headlines.Singleton.SelectSingleton;
+import android.widget.TextView;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import com.ntseng.cnn_top_headlines.Singleton.DAOSingleton;
+import com.ntseng.cnn_top_headlines.adapter.SearchesAdapter;
+import com.ntseng.cnn_top_headlines.adapter.TopNewsAdapter;
+import com.ntseng.cnn_top_headlines.model.NewsItem;
+
+
+import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
 
-public class SearchActivity extends ActionBarActivity {
 
-    Toolbar toolBar;
-    ActionBar actionBar;
+public class SearchActivity extends AppCompatActivity {
+
     EditText keywordET;
-    ImageView cancelButton;
     ListView preSearchesListView;
-    ListView resultListView;
+    TextView searchesTV;
 
     SharedPreferences spfKeyword;
     SharedPreferences.Editor spfEditor;
 
-    private List<String> preSearchesList = new ArrayList();
     private List<NewsItem> resultList;
+    private List keywords = new ArrayList();
 
     TopNewsAdapter mTopNewsAdapter;
     SearchesAdapter mSearchesAdapter;
@@ -52,30 +54,36 @@ public class SearchActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
 
-        toolBar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolBar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolBar);
-        actionBar = getSupportActionBar();
+        ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
 
         keywordET = (EditText) findViewById(R.id.text_search);
-        cancelButton = (ImageView) findViewById(R.id.cancel_button);
+        ImageView cancelButton = (ImageView) findViewById(R.id.cancel_button);
         preSearchesListView = (ListView) findViewById(R.id.searches_listView);
-        resultListView = (ListView) findViewById(R.id.result_listView);
-
-        resultListView.setOnItemClickListener(resultListOnItemClickListener);
-        cancelButton.setOnClickListener(mOnClickListener);
+        ListView resultListView = (ListView) findViewById(R.id.result_listView);
+        searchesTV = (TextView) findViewById(R.id.searches_display);
 
         spfKeyword = getSharedPreferences("preSearches", MODE_PRIVATE);
         spfEditor = spfKeyword.edit();
 
-        keywordET.addTextChangedListener(mTextWatcher);
         keywordET.setText(spfKeyword.getString("preSearches", null));
         keywordET.setOnKeyListener(mOnKeyListener);
 
+        resultList = getResults(null);
+        mTopNewsAdapter = new TopNewsAdapter(SearchActivity.this, resultList);
+        resultListView.setAdapter(mTopNewsAdapter);
+        resultListView.setOnItemClickListener(resultListOnItemClickListener);
 
-        mSearchesAdapter = new SearchesAdapter(this, getSearches());
+        getKeywords();
+        mSearchesAdapter = new SearchesAdapter(this, keywords);
         preSearchesListView.setAdapter(mSearchesAdapter);
         preSearchesListView.setOnItemClickListener(searchesListOnItemClickListener);
+
+
+        cancelButton.setOnClickListener(cancelBTOnClickListener);
+
 
     }
 
@@ -106,37 +114,19 @@ public class SearchActivity extends ActionBarActivity {
         return super.onKeyDown(keyCode, event);
     }
 
-    private View.OnClickListener mOnClickListener = new View.OnClickListener() {
+    private View.OnClickListener cancelBTOnClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            if(resultList != null)
+            if(resultList != null) {
                 resultList.clear();
-            keywordET.setText("");
+                mTopNewsAdapter.notifyDataSetChanged();
+            }
+            keywordET.setText(null);
+            searchesTV.setText("Previous Searches");
             preSearchesListView.setVisibility(View.VISIBLE);
         }
     };
 
-    private TextWatcher mTextWatcher = new TextWatcher() {
-        @Override
-        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-        }
-
-        @Override
-        public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-        }
-
-        @Override
-        public void afterTextChanged(Editable s) {
-
-        }
-    };
-
-    private List<NewsItem> search(String keyword){
-        resultList = SelectSingleton.getSelectInstance().from(NewsItem.class).where("title LIKE ?", new String[] {"%" + keyword + "%" }).execute();
-        return resultList;
-    }
 
     private AdapterView.OnItemClickListener resultListOnItemClickListener = new AdapterView.OnItemClickListener() {
         @Override
@@ -153,7 +143,13 @@ public class SearchActivity extends ActionBarActivity {
     private AdapterView.OnItemClickListener searchesListOnItemClickListener = new AdapterView.OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            keywordET.setText(preSearchesList.get(position));
+            keywordET.setText(String.valueOf(keywords.get(position)));
+            resultList.addAll(getResults(String.valueOf(keywords.get(position))));
+            mTopNewsAdapter.notifyDataSetChanged();
+            preSearchesListView.setVisibility(View.GONE);
+            searchesTV.setText(resultList.size() + " articles matched your keyword");
+
+
         }
     };
 
@@ -161,15 +157,15 @@ public class SearchActivity extends ActionBarActivity {
         @Override
         public boolean onKey(View v, int keyCode, KeyEvent event) {
 
-            if (event.getAction() == KeyEvent.ACTION_DOWN)
-            {
-                if(keyCode == KeyEvent.KEYCODE_ENTER){
-                    saveSearches(String.valueOf(keywordET.getText()));
-                    search(String.valueOf(keywordET.getText()));
-                    mTopNewsAdapter = new TopNewsAdapter(SearchActivity.this, resultList);
-                    resultListView.setAdapter(mTopNewsAdapter);
+            if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                if (keyCode == KeyEvent.KEYCODE_ENTER) {
+                    Log.e("text", "edit " + keywordET.getText());
+                    String keyword = String.valueOf(keywordET.getText());
+                    saveSearches(keyword);
+                    resultList.addAll(getResults(keyword));
+                    mTopNewsAdapter.notifyDataSetChanged();
                     preSearchesListView.setVisibility(View.GONE);
-
+                    searchesTV.setText(resultList.size() + " articles matched your keyword");
                 }
             }
             return false;
@@ -177,26 +173,37 @@ public class SearchActivity extends ActionBarActivity {
 
     };
 
+    private List<NewsItem> getResults(String keyword){
+        return DAOSingleton.getDAOInstance().queryNewsByTitle(keyword);
+    }
+
     private void saveSearches(String s){
-        preSearchesList.add(0,s);
-        if(preSearchesList.size() > 5){
-            preSearchesList.remove(5);
-            mSearchesAdapter.notifyDataSetChanged();
+        keywords.add(0, s);
+        if(keywords.size() > 5){
+            keywords.remove(5);
         }
-        Set<String> savedString = new LinkedHashSet<String>();
-        savedString.addAll(preSearchesList);
-        spfEditor.putStringSet("keyword", savedString);
+        mSearchesAdapter.notifyDataSetChanged();
+
+        Gson gson = new Gson();
+        String keyword = gson.toJson(keywords);
+
+        spfEditor.putString("keyword", keyword);
         spfEditor.commit();
     }
 
-    private List<String> getSearches(){
-        Set<String> savedString = new LinkedHashSet<String>();
-        savedString = spfKeyword.getStringSet("keyword", null);
-        if(savedString != null) {
-            for (String s : savedString) {
-                preSearchesList.add(s);
-            }
+    private List<String> getKeywords(){
+
+        String keyword = spfKeyword.getString("keyword", null);
+
+        Gson gson = new Gson();
+        Type type = new TypeToken<List>(){}.getType();
+        if(keyword == null){
+            keywords.add("");
+        } else {
+            keywords = gson.fromJson(keyword, type);
+            searchesTV.setText("Previous Searches");
         }
-        return preSearchesList;
+        return keywords;
     }
+
 }

@@ -1,28 +1,22 @@
-package com.ntseng.cnn_top_headlines.Fragment;
+package com.ntseng.cnn_top_headlines.fragment;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
-import android.widget.Toast;
 
-import com.activeandroid.query.Select;
-import com.ntseng.cnn_top_headlines.Adapter.FavoriteNewsAdapter;
-import com.ntseng.cnn_top_headlines.Adapter.TopNewsAdapter;
-import com.ntseng.cnn_top_headlines.Model.NewsItem;
+import com.ntseng.cnn_top_headlines.Singleton.DAOSingleton;
+import com.ntseng.cnn_top_headlines.adapter.FavoriteNewsAdapter;
+import com.ntseng.cnn_top_headlines.model.NewsItem;
 import com.ntseng.cnn_top_headlines.NewsDetailActivity;
 import com.ntseng.cnn_top_headlines.R;
-import com.ntseng.cnn_top_headlines.Singleton.SelectSingleton;
+
 
 import java.util.List;
 
@@ -46,7 +40,7 @@ public class FavoriteNewsFragment extends Fragment {
         super.onActivityCreated(savedInstanceState);
 
         favoriteNewsListview = (ListView)getActivity().findViewById(R.id.favoriteNewslistView);
-        favoriteItemList = getFavoriteNews(true);
+        favoriteItemList = DAOSingleton.getDAOInstance().getFavoriteNews(true);
         mFavoriteNewsAdapter = new FavoriteNewsAdapter(getActivity(), favoriteItemList);
         favoriteNewsListview.setAdapter(mFavoriteNewsAdapter);
 
@@ -54,9 +48,6 @@ public class FavoriteNewsFragment extends Fragment {
         favoriteNewsListview.setOnItemLongClickListener(onItemLongClickListener);
     }
 
-    private List<NewsItem> getFavoriteNews (boolean favorite) {
-        return SelectSingleton.getSelectInstance().from(NewsItem.class).where ("favorite = ?", favorite).execute();
-    }
 
     private AdapterView.OnItemClickListener onItemClickListener = new AdapterView.OnItemClickListener() {
         @Override
@@ -83,7 +74,7 @@ public class FavoriteNewsFragment extends Fragment {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             newsItem.setFavorite(false);
-                            newsItem.save();
+                            DAOSingleton.getDAOInstance().saveItem(newsItem);
                             favoriteItemList.remove(itemPosition);
                             mFavoriteNewsAdapter.notifyDataSetChanged();
                         }
@@ -98,18 +89,9 @@ public class FavoriteNewsFragment extends Fragment {
         }
     };
 
-    public void onRefresh(){
+    public void refresh(){
         favoriteItemList.clear();
-        favoriteItemList = getFavoriteNews(true);
-        mFavoriteNewsAdapter = new FavoriteNewsAdapter(getActivity(), favoriteItemList);
-        favoriteNewsListview.setAdapter(mFavoriteNewsAdapter);
-
-        Log.e("favoriteItem","" + favoriteItemList.size());
-//        FavoriteNewsFragment favoriteNewsFragment = null;
-//        favoriteNewsFragment = (FavoriteNewsFragment) getActivity().getSupportFragmentManager().findFragmentById(R.id.pager);
-//        final FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
-//        ft.detach(favoriteNewsFragment);
-//        ft.attach(favoriteNewsFragment);
-//        ft.commit();
+        favoriteItemList.addAll(DAOSingleton.getDAOInstance().getFavoriteNews(true));
+        mFavoriteNewsAdapter.notifyDataSetChanged();
     }
 }

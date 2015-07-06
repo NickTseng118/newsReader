@@ -1,8 +1,6 @@
-package com.ntseng.cnn_top_headlines.Adapter;
+package com.ntseng.cnn_top_headlines.adapter;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -11,17 +9,17 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.facebook.drawee.view.SimpleDraweeView;
-import com.ntseng.cnn_top_headlines.Model.NewsItem;
+import com.ntseng.cnn_top_headlines.Singleton.DAOSingleton;
+import com.ntseng.cnn_top_headlines.model.NewsItem;
 import com.ntseng.cnn_top_headlines.R;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by nicktseng on 15/6/25.
@@ -31,13 +29,8 @@ public class TopNewsAdapter extends ArrayAdapter<NewsItem> {
     private List<NewsItem> mNewsItems;
     private Context mContext;
     private int position;
-    NewsItem newsItem;
-
-    TextView titleTV;
+    private NewsItem newsItem;
     ImageView favoriteImage;
-    TextView dateTV;
-    TextView contentTV;
-    SimpleDraweeView newsImage;
 
     public TopNewsAdapter(Context context, List<NewsItem> newsItems) {
         super(context, R.layout.top_news_view, newsItems);
@@ -55,21 +48,21 @@ public class TopNewsAdapter extends ArrayAdapter<NewsItem> {
             convertView = LayoutInflater.from(getContext()).inflate(R.layout.top_news_view, parent, false);
         }
 
-        titleTV = (TextView)convertView.findViewById(R.id.title);
+        TextView titleTV = (TextView)convertView.findViewById(R.id.title);
         favoriteImage = (ImageView)convertView.findViewById(R.id.favoriteImage);
-        dateTV = (TextView)convertView.findViewById(R.id.date);
-        contentTV = (TextView)convertView.findViewById(R.id.content);
-        newsImage = (SimpleDraweeView) convertView.findViewById(R.id.newsImage);
+        TextView dateTV = (TextView)convertView.findViewById(R.id.date);
+        TextView contentTV = (TextView)convertView.findViewById(R.id.content);
+        SimpleDraweeView newsImage = (SimpleDraweeView) convertView.findViewById(R.id.newsImage);
 
         String mediaThumbnail = newsItem.getMediaThumbnail();
         if(mediaThumbnail != null){
             Uri uri = Uri.parse(mediaThumbnail);
             newsImage.setImageURI(uri);
         }
-        titleTV.setText(newsItem.getTitle().replaceAll("\n","").trim());
-        dateTV.setText(newsItem.getPubDate());
+        titleTV.setText(newsItem.getTitle().replaceAll("\n", "").trim());
+        dateTV.setText(dateFormat(newsItem.getPubDate()));
 
-        contentViewVisibility();
+        hideIfNoDescription(contentTV);
         setFavoriteImage();
 
         return convertView;
@@ -88,13 +81,12 @@ public class TopNewsAdapter extends ArrayAdapter<NewsItem> {
                 favoriteImage.setImageResource(R.drawable.ic_star_black_36dp);
                 newsItem.setFavorite(true);
             }
-            newsItem.save();
-
+            DAOSingleton.getDAOInstance().saveItem(newsItem);
             notifyDataSetChanged();
         }
     };
 
-    private void contentViewVisibility(){
+    private void hideIfNoDescription(TextView contentTV){
         if(newsItem.getDescription().length() <= 1){
             contentTV.setVisibility(View.GONE);
         }else{
@@ -110,6 +102,11 @@ public class TopNewsAdapter extends ArrayAdapter<NewsItem> {
         }
         favoriteImage.setOnClickListener(mOnClickListener);
         favoriteImage.setTag(newsItem);
+    }
+
+    private String dateFormat(Date text){
+        SimpleDateFormat formatter = new SimpleDateFormat("EEE',' dd MMM yyyy HH:mm:ss", Locale.US);
+        return formatter.format(text);
     }
 }
 
