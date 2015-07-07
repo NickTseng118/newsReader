@@ -44,13 +44,13 @@ public class NewsItemDAO {
                 saveNewsItemList.add(newsItem);
             }else{
                 int value = 0;
-                for (NewsItem newsItemDB : selectAll()) {
+                    for (NewsItem newsItemDB : selectAll()) {
                     value = newsItem.getTitle().compareToIgnoreCase(newsItemDB.getTitle());
                     if(value == 0){
+                        newsItemDB.delete();
                         break;
                     }
                 }
-                if(value != 0)
                 saveNewsItemList.add(0, newsItem);
             }
         }

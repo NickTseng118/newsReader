@@ -11,7 +11,7 @@ import android.view.MenuItem;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
-import com.ntseng.cnn_top_headlines.Singleton.DAOSingleton;
+import com.ntseng.cnn_top_headlines.singleton.DAOSingleton;
 import com.ntseng.cnn_top_headlines.model.NewsItem;
 
 

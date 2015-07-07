@@ -16,22 +16,24 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 import com.activeandroid.ActiveAndroid;
 import com.facebook.drawee.backends.pipeline.Fresco;
-import com.ntseng.cnn_top_headlines.Singleton.DAOSingleton;
 import com.ntseng.cnn_top_headlines.adapter.SectionPagerAdapter;
 import com.ntseng.cnn_top_headlines.fragment.FavoriteNewsFragment;
 import com.ntseng.cnn_top_headlines.fragment.TopNewsFragment;
+import com.ntseng.cnn_top_headlines.service.RoutineUpdateService;
+import com.ntseng.cnn_top_headlines.service.XMLParserService;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Handler;
 
 
 public class MainActivity extends AppCompatActivity {
 
     Intent startservice;
+    Intent startRoutineUpdate;
     SectionPagerAdapter mSectionPagerAdapter;
 
     SharedPreferences prefs = null;
@@ -46,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
     private final static int TOP_FRAGMENT = 0;
     private final static int FAVORITE_FRAGMENT = 1;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,6 +60,10 @@ public class MainActivity extends AppCompatActivity {
         prefs = getSharedPreferences("com.ntseng.cnn", MODE_PRIVATE);
 
         startservice = new Intent(MainActivity.this, XMLParserService.class);
+        startRoutineUpdate = new Intent(MainActivity.this, RoutineUpdateService.class);
+        startService(startRoutineUpdate);
+
+
         Toolbar toolBar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolBar);
         ActionBar actionBar = getSupportActionBar();
@@ -80,13 +87,11 @@ public class MainActivity extends AppCompatActivity {
         IntentFilter grabCompletion = new IntentFilter(XMLParserService.GRAB_COMPLETTION);
         LocalBroadcastManager.getInstance(this).registerReceiver(onEvent, grabCompletion);
 
-        
-
     }
 
     @Override
-    public void onPause() {
-        super.onPause();
+    protected void onDestroy() {
+        super.onDestroy();
         LocalBroadcastManager.getInstance(this).unregisterReceiver(onEvent);
     }
 
@@ -112,14 +117,13 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         if (id == R.id.action_search) {
-            Intent intent = new Intent(this,SearchActivity.class);
+            Intent intent = new Intent(this, SearchActivity.class);
             startActivity(intent);
             overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_left );
             return true;
         }else if(id == R.id.action_refresh){
             startService(startservice);
             dialog = ProgressDialog.show(this, "Refreshing", "Please Wait...", true);
-
 
             return true;
         }
@@ -128,11 +132,9 @@ public class MainActivity extends AppCompatActivity {
 
     private BroadcastReceiver onEvent = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
-
             viewPager.setAdapter(mSectionPagerAdapter);
             if(dialog != null)
                 dialog.dismiss();
-
         }
     };
 

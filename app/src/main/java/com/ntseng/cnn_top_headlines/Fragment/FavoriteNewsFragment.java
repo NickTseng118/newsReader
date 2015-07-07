@@ -11,7 +11,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
-import com.ntseng.cnn_top_headlines.Singleton.DAOSingleton;
+import com.ntseng.cnn_top_headlines.singleton.DAOSingleton;
 import com.ntseng.cnn_top_headlines.adapter.FavoriteNewsAdapter;
 import com.ntseng.cnn_top_headlines.model.NewsItem;
 import com.ntseng.cnn_top_headlines.NewsDetailActivity;

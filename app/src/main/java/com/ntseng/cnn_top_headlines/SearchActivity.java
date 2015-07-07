@@ -7,8 +7,6 @@ import android.support.v7.app.ActionBar;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -22,7 +20,7 @@ import android.widget.TextView;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.ntseng.cnn_top_headlines.Singleton.DAOSingleton;
+import com.ntseng.cnn_top_headlines.singleton.DAOSingleton;
 import com.ntseng.cnn_top_headlines.adapter.SearchesAdapter;
 import com.ntseng.cnn_top_headlines.adapter.TopNewsAdapter;
 import com.ntseng.cnn_top_headlines.model.NewsItem;

@@ -12,7 +12,7 @@
         android:theme="@style/MyMaterialTheme" >
         <activity
             android:name=".MainActivity"
-            android:label="@string/app_name">
+            android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -27,7 +27,7 @@
             android:name="AA_DB_VERSION"
             android:value="5" />
 
-        <service android:name=".XMLParserService" >
+        <service android:name=".service.XMLParserService" >
             android:exported="false" >
         </service>
 
@@ -39,6 +39,12 @@
             android:name=".SearchActivity"
             android:label="@string/title_activity_search" >
         </activity>
+
+        <service
+            android:name=".service.RoutineUpdateService"
+            android:enabled="true"
+            android:exported="true" >
+        </service>
     </application>
 
 </manifest>

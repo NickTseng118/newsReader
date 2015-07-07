@@ -17,6 +17,7 @@ public class SectionPagerAdapter extends FragmentStatePagerAdapter {
         this.fragments = fragments;
     }
 
+
     @Override
     public int getCount() {
         return fragments.size();

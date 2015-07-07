@@ -1,15 +1,15 @@
-package com.ntseng.cnn_top_headlines;
+package com.ntseng.cnn_top_headlines.service;
 
 import android.app.IntentService;
-import android.app.ProgressDialog;
 import android.content.Intent;
 
+import android.os.Bundle;
+import android.os.ResultReceiver;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
-import com.ntseng.cnn_top_headlines.Singleton.DAOSingleton;
+import com.ntseng.cnn_top_headlines.singleton.DAOSingleton;
 import com.ntseng.cnn_top_headlines.model.NewsItem;
-import com.ntseng.cnn_top_headlines.model.NewsItemDAO;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -25,9 +25,7 @@ import java.util.List;
 import java.util.Locale;
 
 
-/**
- * Created by nicktseng on 15/6/24.
- */
+
 public class XMLParserService extends IntentService {
 
     private String text;
@@ -49,17 +47,13 @@ public class XMLParserService extends IntentService {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
         DAOSingleton.getDAOInstance().merge(newsItemList);
-
-        LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(GRAB_COMPLETTION));
-
-
     }
 
     public void onDestroy() {
         Log.v("test", "onDestroy");
         super.onDestroy();
+        LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(GRAB_COMPLETTION));
     }
 
     public void parseCnnRssFeed()throws XmlPullParserException, IOException {
