@@ -25,11 +25,11 @@ public class NewsItemDAO {
         return newsItemDBList;
     }
 
-    public List<NewsItem> getNewsTitle (String title) {
+    public List<NewsItem> getNewsByTitle (String title) {
         return select.from(NewsItem.class).where ("title = ?", title).execute();
     }
 
-    public List<NewsItem> queryNewsByTitle(String keyword){
+    public List<NewsItem> getNewsBykeyword(String keyword){
         return select.from(NewsItem.class).where("title LIKE ?", new String[] {"%" + keyword + "%" }).execute();
     }
 
@@ -44,7 +44,7 @@ public class NewsItemDAO {
                 saveNewsItemList.add(newsItem);
             }else{
                 int value = 0;
-                    for (NewsItem newsItemDB : selectAll()) {
+                    for (NewsItem newsItemDB : newsItemDBList) {
                     value = newsItem.getTitle().compareToIgnoreCase(newsItemDB.getTitle());
                     if(value == 0){
                         newsItemDB.delete();

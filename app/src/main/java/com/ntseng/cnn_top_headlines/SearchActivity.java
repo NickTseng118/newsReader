@@ -172,7 +172,7 @@ public class SearchActivity extends AppCompatActivity {
     };
 
     private List<NewsItem> getResults(String keyword){
-        return DAOSingleton.getDAOInstance().queryNewsByTitle(keyword);
+        return DAOSingleton.getDAOInstance().getNewsBykeyword(keyword);
     }
 
     private void saveSearches(String s){

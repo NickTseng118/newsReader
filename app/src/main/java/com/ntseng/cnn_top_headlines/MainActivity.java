@@ -86,6 +86,8 @@ public class MainActivity extends AppCompatActivity {
 
         IntentFilter grabCompletion = new IntentFilter(XMLParserService.GRAB_COMPLETTION);
         LocalBroadcastManager.getInstance(this).registerReceiver(onEvent, grabCompletion);
+        IntentFilter favoriteIconChange = new IntentFilter(NewsDetailActivity.FAVORITE_ICON_CHANGE);
+        LocalBroadcastManager.getInstance(this).registerReceiver(onEvent, favoriteIconChange);
 
     }
 

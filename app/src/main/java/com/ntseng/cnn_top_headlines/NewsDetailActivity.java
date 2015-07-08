@@ -1,6 +1,8 @@
 package com.ntseng.cnn_top_headlines;
 
 
+import android.content.Intent;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
@@ -20,6 +22,7 @@ public class NewsDetailActivity extends ActionBarActivity {
 
     private NewsItem newsItem;
     WebView myBrowser;
+    public static final String FAVORITE_ICON_CHANGE = "com.ntseng.cnn_top_headlines.NewsDetailActivity.favoriteChange";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +66,7 @@ public class NewsDetailActivity extends ActionBarActivity {
         int id = item.getItemId();
 
         if (id == R.id.action_add_favorite) {
+            LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(FAVORITE_ICON_CHANGE));
             saveFavorite(item);
             return true;
         }else if (id == android.R.id.home) {
@@ -90,7 +94,7 @@ public class NewsDetailActivity extends ActionBarActivity {
 
     private void saveFavorite(MenuItem menuItem){
 
-        NewsItem newsItemDB = DAOSingleton.getDAOInstance().getNewsTitle(newsItem.getTitle()).get(0);
+        NewsItem newsItemDB = DAOSingleton.getDAOInstance().getNewsByTitle(newsItem.getTitle()).get(0);
         if(newsItemDB.getFavorite() != null && newsItemDB.getFavorite()) {
             newsItemDB.setFavorite(false);
             menuItem.setIcon(R.drawable.ic_star_border_black_36dp);
