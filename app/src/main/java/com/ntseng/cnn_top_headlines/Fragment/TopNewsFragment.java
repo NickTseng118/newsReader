@@ -3,6 +3,8 @@ package com.ntseng.cnn_top_headlines.fragment;
 import android.content.Intent;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -59,7 +61,10 @@ public class TopNewsFragment extends Fragment {
         }
     };
 
+
     public void refresh(){
+      //  topItemList.clear();
+        topItemList.addAll(DAOSingleton.getDAOInstance().selectAll());
         mTopNewsAdapter.notifyDataSetChanged();
     }
 

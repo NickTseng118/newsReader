@@ -13,7 +13,6 @@ import java.util.concurrent.ExecutionException;
 
 public class NewsItemDAO {
 
-    //private List<NewsItem> newsItemList;
     private List<NewsItem> newsItemDBList;
     Select select = new Select();
 
@@ -25,16 +24,16 @@ public class NewsItemDAO {
         return newsItemDBList;
     }
 
-    public List<NewsItem> getNewsTitle (String title) {
+    public List<NewsItem> getNewsByTitle (String title) {
         return select.from(NewsItem.class).where ("title = ?", title).execute();
     }
 
-    public List<NewsItem> queryNewsByTitle(String keyword){
+    public List<NewsItem> getNewsByKeyword(String keyword){
         return select.from(NewsItem.class).where("title LIKE ?", new String[] {"%" + keyword + "%" }).execute();
     }
 
-    public List<NewsItem> getFavoriteNews (boolean favorite) {
-        return select.from(NewsItem.class).where ("favorite = ?", favorite).execute();
+    public List<NewsItem> getFavoriteNews () {
+        return select.from(NewsItem.class).where ("favorite = ?", true).execute();
     }
 
     public void merge(List<NewsItem> newsItemList){
@@ -44,7 +43,7 @@ public class NewsItemDAO {
                 saveNewsItemList.add(newsItem);
             }else{
                 int value = 0;
-                    for (NewsItem newsItemDB : selectAll()) {
+                    for (NewsItem newsItemDB : newsItemDBList) {
                     value = newsItem.getTitle().compareToIgnoreCase(newsItemDB.getTitle());
                     if(value == 0){
                         newsItemDB.delete();

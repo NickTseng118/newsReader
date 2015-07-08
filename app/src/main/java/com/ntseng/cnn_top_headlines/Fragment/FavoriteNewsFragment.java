@@ -40,7 +40,7 @@ public class FavoriteNewsFragment extends Fragment {
         super.onActivityCreated(savedInstanceState);
 
         favoriteNewsListview = (ListView)getActivity().findViewById(R.id.favoriteNewslistView);
-        favoriteItemList = DAOSingleton.getDAOInstance().getFavoriteNews(true);
+        favoriteItemList = DAOSingleton.getDAOInstance().getFavoriteNews();
         mFavoriteNewsAdapter = new FavoriteNewsAdapter(getActivity(), favoriteItemList);
         favoriteNewsListview.setAdapter(mFavoriteNewsAdapter);
 
@@ -91,7 +91,7 @@ public class FavoriteNewsFragment extends Fragment {
 
     public void refresh(){
         favoriteItemList.clear();
-        favoriteItemList.addAll(DAOSingleton.getDAOInstance().getFavoriteNews(true));
+        favoriteItemList.addAll(DAOSingleton.getDAOInstance().getFavoriteNews());
         mFavoriteNewsAdapter.notifyDataSetChanged();
     }
 }

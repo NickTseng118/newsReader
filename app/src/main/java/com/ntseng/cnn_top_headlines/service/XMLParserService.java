@@ -17,6 +17,7 @@ import org.xmlpull.v1.XmlPullParserFactory;
 
 import java.io.IOException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -44,7 +45,10 @@ public class XMLParserService extends IntentService {
             parseCnnRssFeed();
         } catch (XmlPullParserException e) {
             e.printStackTrace();
-        } catch (IOException e) {
+        } catch(UnknownHostException e){
+            e.printStackTrace();
+        }
+        catch (IOException e) {
             e.printStackTrace();
         }
         DAOSingleton.getDAOInstance().merge(newsItemList);

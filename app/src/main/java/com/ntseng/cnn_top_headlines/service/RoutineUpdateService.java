@@ -12,6 +12,8 @@ import java.util.TimerTask;
 public class RoutineUpdateService extends Service {
 
     Handler handler;
+    Timer timer = new Timer();
+
     private final static long ROUTINE_UPDATE_TIME = 1000 * 60 * 30;
     public RoutineUpdateService() {
     }
@@ -20,7 +22,6 @@ public class RoutineUpdateService extends Service {
     public void onCreate() {
         super.onCreate();
 
-        Timer timer = new Timer();
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
@@ -41,6 +42,7 @@ public class RoutineUpdateService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        timer.cancel();
     }
 
     @Override
