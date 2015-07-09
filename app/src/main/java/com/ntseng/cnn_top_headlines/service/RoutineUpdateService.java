@@ -11,8 +11,7 @@ import java.util.TimerTask;
 
 public class RoutineUpdateService extends Service {
 
-    Handler handler;
-    private final static long ROUTINE_UPDATE_TIME = 1000 * 60;
+    private final static long ROUTINE_UPDATE_TIME = 1000 * 60 * 30;
     public RoutineUpdateService() {
     }
 
