@@ -16,7 +16,11 @@ import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -40,13 +44,7 @@ public class XMLParserService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
 
-        try {
-            parseCnnRssFeed();
-        } catch (XmlPullParserException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        openCNNHttpConnection();
         DAOSingleton.getDAOInstance().merge(newsItemList);
     }
 
@@ -56,13 +54,34 @@ public class XMLParserService extends IntentService {
         LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(GRAB_COMPLETTION));
     }
 
-    public void parseCnnRssFeed()throws XmlPullParserException, IOException {
+    private  void openCNNHttpConnection(){
+        try{
+            URL input = new URL("http://rss.cnn.com/rss/edition.rss");
+            HttpURLConnection httpURLConnection = (HttpURLConnection)input.openConnection();
+            httpURLConnection.setConnectTimeout(15000);
+            httpURLConnection.setReadTimeout(15000);
+            httpURLConnection.connect();
+
+            if(httpURLConnection.getResponseCode() == httpURLConnection.HTTP_OK ){
+                parseRssFeed(httpURLConnection.getInputStream());
+            }else{
+
+            }
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch(Exception e){
+
+        }
+    }
+
+    private void parseRssFeed(InputStream inputStream)throws XmlPullParserException, IOException {
 
         XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
         factory.setNamespaceAware(true);
         XmlPullParser xpp = factory.newPullParser();
-        URL input = new URL("http://rss.cnn.com/rss/edition.rss");
-        xpp.setInput(input.openStream(), null);
+        xpp.setInput(inputStream, null);
 
         int eventType = xpp.getEventType();
 
