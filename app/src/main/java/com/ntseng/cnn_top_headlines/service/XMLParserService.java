@@ -45,21 +45,28 @@ public class XMLParserService extends IntentService {
         super("XMLParserService");
     }
     public static final String GRAB_COMPLETTION = "com.ntseng.cnn_top_headlines.XMLparserService.grab.COMPLETE";
+    public static final String GRAB_FAILURE = "com.ntseng.cnn_top_headlines.XMLparserService.grab.GRAB_FAILURE";
 
     private boolean downloadSuccessful = false;
-    private Handler handler;
 
     @Override
     protected void onHandleIntent(Intent intent) {
         if (networkIsAvailable()) {
             openCNNHttpConnection();
+            if(newsItemList != null)
             DAOSingleton.getDAOInstance().merge(newsItemList);
         }
+
     }
     public void onDestroy() {
         Log.v("test", "onDestroy");
         super.onDestroy();
-        LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(GRAB_COMPLETTION));
+        Log.v("downloadSuccessful", "onDestroy" + downloadSuccessful);
+        if(downloadSuccessful == true){
+            LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(GRAB_COMPLETTION));
+        }else{
+            LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(GRAB_FAILURE));
+        }
     }
 
     private void openCNNHttpConnection(){
@@ -72,6 +79,7 @@ public class XMLParserService extends IntentService {
 
             if( httpURLConnection.getResponseCode() == httpURLConnection.HTTP_OK ){
                 parseRssFeed(httpURLConnection.getInputStream());
+                downloadSuccessful = true;
             }
         } catch (XmlPullParserException e) {
             e.printStackTrace();
@@ -160,22 +168,6 @@ public class XMLParserService extends IntentService {
         return networkInfo != null && networkInfo.isConnectedOrConnecting();
     }
 
-    private void parseXMLHandler(){
-            handler = new Handler(Looper.getMainLooper());
-            Runnable runnable = new Runnable() {
-                @Override
-                public void run() {
-                    Log.e("download status", "" + downloadSuccessful);
-                    if(downloadSuccessful == false) {
-                        openCNNHttpConnection();
-                        DAOSingleton.getDAOInstance().merge(newsItemList);
-                        downloadSuccessful = true;
-                    }
-                    handler.postDelayed(this, 1000);
-                }
-            };
-        handler.postDelayed(runnable, 0);
-    }
 
 
 }

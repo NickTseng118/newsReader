@@ -6,6 +6,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.design.widget.TabLayout;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.ViewPager;
@@ -19,13 +21,16 @@ import android.view.MenuItem;
 import android.view.View;
 
 import com.activeandroid.ActiveAndroid;
+import com.crashlytics.android.Crashlytics;
 import com.facebook.drawee.backends.pipeline.Fresco;
 import com.ntseng.cnn_top_headlines.adapter.SectionPagerAdapter;
 import com.ntseng.cnn_top_headlines.fragment.FavoriteNewsFragment;
 import com.ntseng.cnn_top_headlines.fragment.TopNewsFragment;
 import com.ntseng.cnn_top_headlines.service.RoutineUpdateService;
 import com.ntseng.cnn_top_headlines.service.XMLParserService;
+import com.ntseng.cnn_top_headlines.singleton.DAOSingleton;
 
+import io.fabric.sdk.android.Fabric;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Fabric.with(this, new Crashlytics());
         setContentView(R.layout.activity_main);
 
         ActiveAndroid.initialize(this);
@@ -86,6 +92,8 @@ public class MainActivity extends AppCompatActivity {
 
         IntentFilter grabCompletion = new IntentFilter(XMLParserService.GRAB_COMPLETTION);
         LocalBroadcastManager.getInstance(this).registerReceiver(onEvent, grabCompletion);
+        IntentFilter grabFailure = new IntentFilter(XMLParserService.GRAB_FAILURE);
+        LocalBroadcastManager.getInstance(this).registerReceiver(onEvent, grabFailure);
         IntentFilter favoriteIconChange = new IntentFilter(NewsDetailActivity.FAVORITE_ICON_CHANGE);
         LocalBroadcastManager.getInstance(this).registerReceiver(onEvent, favoriteIconChange);
 
@@ -94,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(onEvent);
+        //LocalBroadcastManager.getInstance(this).unregisterReceiver(onEvent);
     }
 
     @Override
@@ -159,5 +167,6 @@ public class MainActivity extends AppCompatActivity {
 
         }
     };
+
 
 }
